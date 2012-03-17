@@ -9,7 +9,7 @@ use Xi\Filelib\Configurator;
  * @todo Some kind of initializer stuff for converting resources to init
  *
  */
-class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_ResourceAbstract
+class Xi_Zend_Filelib_Application_Resource_Filelib extends Zend_Application_Resource_ResourceAbstract
 {
 
     /**
@@ -112,6 +112,10 @@ class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_Resourc
             */
             
             $config->setAcl(new \Xi\Filelib\Acl\SimpleAcl());
+
+            
+            
+            
             
             
             // $this->_filelib = new \Xi\Filelib\FileLibrary($config);
@@ -129,14 +133,36 @@ class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_Resourc
     public function init()
     {
         $filelib = $this->getFilelib();
-        $renderer = new Xi\Filelib\Renderer\ZendRenderer($filelib);
-                
+        $renderer = $this->getRenderer();
+                                
         Zend_Registry::set('Xi_Filelib', $filelib);
         Zend_Registry::set('Xi_Filelib_Renderer', $renderer);
 
         return $filelib;
     }
 
+    
+    public function getRenderer()
+    {
+        $renderer = new Xi\Filelib\Renderer\ZendRenderer($this->getFilelib());
+
+        $options = $this->getOptions();
+        $rendererOptions = $options['renderer'];
+        
+        $renderer->enableAcceleration((bool) $rendererOptions['enableAcceleration']);
+
+        if (isset($rendererOptions['stripPrefixFromAcceleratedPath'])) {
+            $renderer->setStripPrefixFromAcceleratedPath($rendererOptions['stripPrefixFromAcceleratedPath']);
+        }
+        
+        if (isset($rendererOptions['addPrefixToAcceleratedPath'])) {
+            $renderer->setAddPrefixToAcceleratedPath($rendererOptions['addPrefixToAcceleratedPath']);
+        }
+        
+        return $renderer;
+        
+    }
+    
     
     
     private function _handleStorageOptions($storageOptions)
