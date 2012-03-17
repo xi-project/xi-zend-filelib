@@ -1,4 +1,7 @@
 <?php
+
+use Xi\Filelib\Configurator;
+
 /**
  * Filelib initialization
  * 
@@ -52,17 +55,18 @@ class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_Resourc
             $backendOptions = $options['backend'];
             unset($options['backend']);
 
-            
-            
             $backendOptions = $this->_handleBackendOptions($backendOptions);
+
+            $reflClass = new \ReflectionClass($backendOptions['type']);
+            $backend = $reflClass->newInstanceArgs($backendOptions['arguments']);
+            Configurator::setOptions($backend, $backendOptions['options']);
 
             $config = new Xi\Filelib\FileLibrary($options);
             if(isset($options['tempDir'])) {
                 $config->setTempDir($options['tempDir']);
             }
-                                    
             
-            $backend = new $backendOptions['type']($backendOptions['options']);
+            // $backend = new $backendOptions['type']($backendOptions['options']);
             $config->setBackend($backend);
             
             $storageOptions = $this->_handleStorageOptions($storageOptions);
@@ -125,8 +129,11 @@ class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_Resourc
     public function init()
     {
         $filelib = $this->getFilelib();
-        
-        Zend_Registry::set('Emerald_Filelib', $filelib);
+        $renderer = new Xi\Filelib\Renderer\ZendRenderer($filelib);
+                
+        Zend_Registry::set('Xi_Filelib', $filelib);
+        Zend_Registry::set('Xi_Filelib_Renderer', $renderer);
+
         return $filelib;
     }
 
@@ -154,28 +161,12 @@ class Xi_Zend_Filelib_Resource_Filelib extends Zend_Application_Resource_Resourc
 
     private function _handleBackendOptions($backendOptions)
     {
+        if (!isset($backendOptions['arguments'])) {
+            $backendOptions['arguments'] = array();
+        }
         
-        if ($backendOptions['type'] == 'Xi\Filelib\Backend\ZendDbBackend') {
-            if (isset($backendOptions['options']['resource'])) {
-                $backendOptions['options']['db'] = $this->getBootstrap()->bootstrap($backendOptions['options']['resource'])->getResource($backendOptions['options']['resource']);
-                unset($backendOptions['options']['resource']);
-            }
-        } elseif ($backendOptions['type'] == 'Xi\Filelib\Backend\MongoBackend') {
-            if (isset($backendOptions['options']['resource'])) {
-                
-                $mongo = $this->getBootstrap()->bootstrap($backendOptions['options']['resource'])->getResource($backendOptions['options']['resource']);
-                
-                if($mongo instanceof \Mongo && isset($backendOptions['options']['dbname'])) {
-                    $mongo = $mongo->$backendOptions['options']['dbname'];
-                }
-                
-                $backendOptions['options']['mongo'] = $mongo;
-                
-                
-                unset($backendOptions['options']['resource']);
-            }
-        } elseif ($backendOptions['type'] == 'Xi\Filelib\Backend\Doctrine2Backend') {
-            $backendOptions['options']['entityManager'] = $this->getBootstrap()->bootstrap($backendOptions['options']['resource'])->getResource($backendOptions['options']['resource']);
+        if (isset($backendOptions['options']['resource'])) {
+            $backendOptions['arguments'][] = $this->getBootstrap()->bootstrap($backendOptions['options']['resource'])->getResource($backendOptions['options']['resource']);
             unset($backendOptions['options']['resource']);
         }
         
