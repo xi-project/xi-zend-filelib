@@ -1,0 +1,30 @@
+{
+    "name": "xi/zend-filelib",
+    "type": "library",
+    "description": "Filelib extension for ZF1",
+    "keywords": ["file management", "file", "image", "video"],
+    "homepage": "http://github.com/xi-project/xi-zend-filelib",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Mikko Forsström",
+            "email": "pekkisx@gmail.com",
+            "homepage": "http://diktaattoriporssi.com",
+            "role": "Developer"
+        }
+    ],
+
+    "require": {
+        "php": ">=5.3.0",
+    },
+
+    "require-dev": {
+    },
+
+    "autoload": {
+        "psr-0": {
+            "Xi\\Zend\\Filelib": "library/"
+        }
+    },
+    "minimum-stability": "dev"
+}
